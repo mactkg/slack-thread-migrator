@@ -10,7 +10,4 @@ Run these commands to get started
 
   # Run the tests
   deno test
-
-  # Run the benchmarks
-  deno bench
 ```
