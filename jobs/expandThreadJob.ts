@@ -6,7 +6,7 @@ import {
 } from "../slack/index.ts";
 import { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
 
-export class ExpandThreadJob {
+export class MigrateThreadJob {
   errors: string[] = [];
 
   constructor(

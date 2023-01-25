@@ -3,7 +3,7 @@ import {
   sendMessageAsUser,
   socketModeClient,
 } from "./slack/index.ts";
-import { ExpandThreadJob } from "./jobs/expandThreadJob.ts";
+import { MigrateThreadJob } from "./jobs/expandThreadJob.ts";
 
 socketModeClient.addEventListener("message", ({ detail: { body, ack } }) => {
   ack();
@@ -35,14 +35,14 @@ socketModeClient.addEventListener(
 
     ack();
 
-    const expanding = new ExpandThreadJob(
+    const migrage = new MigrateThreadJob(
       body.channel.id,
       body.channel.name,
       body.message.thread_ts,
     );
-    const result = await expanding.run();
+    const result = await migrage.run();
     if (!result) {
-      console.error(expanding.errors);
+      console.error(migrage.errors);
     }
   },
 );

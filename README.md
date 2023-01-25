@@ -1,4 +1,5 @@
-# slack-thread-expander
+# slack-thread-migrator
+
 ```
 Run these commands to get started
 
