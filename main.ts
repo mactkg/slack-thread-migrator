@@ -1,11 +1,9 @@
 import {
-  createChannel,
-  expandThread,
   isBotItselfMessage,
   sendMessageAsUser,
-  sendMessageToThread,
   socketModeClient,
 } from "./slack/index.ts";
+import { ExpandThreadJob } from "./jobs/expandThreadJob.ts";
 
 socketModeClient.addEventListener("message", ({ detail: { body, ack } }) => {
   ack();
@@ -37,27 +35,15 @@ socketModeClient.addEventListener(
 
     ack();
 
-    const threadDate = new Date(body.message.thread_ts * 1000);
-    const datetime =
-      `${threadDate.getUTCFullYear()}-${threadDate.getMonth()}-${threadDate.getUTCDay()}-${threadDate.getHours()}-${threadDate.getMinutes()}`;
-    const channel = await createChannel(
-      `talk-at-${body.channel.name.slice(0, 10)}-${datetime}abs`,
-      `copy of conversation at [URL]`,
+    const expanding = new ExpandThreadJob(
+      body.channel.id,
+      body.channel.name,
+      body.message.thread_ts,
     );
-    if (!channel.ok) {
-      console.error("something wrong");
-      return;
+    const result = await expanding.run();
+    if (!result) {
+      console.error(expanding.errors);
     }
-    await expandThread(
-      channel.channel.id,
-      body.channel.id,
-      body.message.thread_ts,
-    );
-    await sendMessageToThread(
-      `このスレッドは <#${channel.channel.id}> に移行しました。`,
-      body.channel.id,
-      body.message.thread_ts,
-    );
   },
 );
 

@@ -102,18 +102,19 @@ export async function expandThread(
   }
 }
 
-export async function createChannel(name: string, topic: string) {
-  console.info(name, topic);
+export async function createChannel(name: string) {
   const createResult = await apiClient.conversations.create({
     name,
   });
   if (!createResult.ok) {
     console.error("error at createChannel.create", createResult.error);
-    return createResult;
   }
+  return createResult;
+}
 
+export async function setTopic(channelId: string, topic: string) {
   const topicResult = await apiClient.conversations.setTopic({
-    channel: createResult.channel.id,
+    channel: channelId,
     topic,
   });
   if (!topicResult.ok) {
