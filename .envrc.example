@@ -1,0 +1,2 @@
+export SLACK_SOCKET_TOKEN=xapp-xxxx
+export SLACK_OAUTH_TOKEN=xoxb-xxxx
