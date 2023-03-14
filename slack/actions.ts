@@ -18,11 +18,6 @@ export async function getUserInfo(userId: string) {
   }
 }
 
-export function isBotItselfMessage(body: any) {
-  const { api_app_id, event } = body;
-  return event.subtype === "bot_message" && api_app_id === event.app_id;
-}
-
 export async function sendMessageToThread(
   text: string,
   channel: string,
