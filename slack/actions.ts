@@ -21,7 +21,7 @@ export async function getUserInfo(userId: string) {
 export async function sendMessageToThread(
   text: string,
   channel: string,
-  thread_ts: string,
+  thread_ts: string
 ) {
   return await apiClient.chat.postMessage({
     text,
@@ -35,7 +35,9 @@ export async function sendMessageToThread(
  * [ ] attachment support
  */
 export async function sendMessageAsUser(args: any, userId: string) {
-  const { profile: { display_name, image_72 } } = await getUserInfo(userId);
+  const {
+    profile: { display_name, image_72 },
+  } = await getUserInfo(userId);
 
   if (!args.text) {
     console.warn(`unsupported request: ${args}`);
@@ -85,14 +87,17 @@ export async function getEntireMessagesOfThread(channel: string, ts: string) {
 export async function expandThread(
   toChannel: string,
   fromChannel: string,
-  ts: string,
+  ts: string
 ) {
   const messages = await getEntireMessagesOfThread(fromChannel, ts);
   for (const message of messages) {
-    await sendMessageAsUser({
-      text: message.text,
-      channel: toChannel,
-    }, message.user);
+    await sendMessageAsUser(
+      {
+        text: message.text,
+        channel: toChannel,
+      },
+      message.user
+    );
     console.info(`sent request ${message.text} by ${message.user}`);
   }
 }

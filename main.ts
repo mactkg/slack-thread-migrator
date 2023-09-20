@@ -1,6 +1,4 @@
-import {
-  socketModeClient,
-} from "./slack/index.ts";
+import { socketModeClient } from "./slack/index.ts";
 import { MigrateThreadJob } from "./jobs/expandThreadJob.ts";
 
 socketModeClient.addEventListener(
@@ -13,13 +11,13 @@ socketModeClient.addEventListener(
     const migrage = new MigrateThreadJob(
       body.channel.id,
       body.channel.name,
-      body.message.thread_ts,
+      body.message.thread_ts
     );
     const result = await migrage.run();
     if (!result) {
       console.error(migrage.errors);
     }
-  },
+  }
 );
 
 await socketModeClient.start();
