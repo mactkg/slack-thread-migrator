@@ -1,6 +1,66 @@
 import { apiClient } from "./client.ts";
 import { CHANNEL_DEV_NULL } from "./constants.ts";
 
+export class NameTakenError extends Error {
+  constructor(public channel_name: string) {
+    super();
+  }
+}
+export async function createChannel(name: string) {
+  const createResult = await apiClient.conversations.create({
+    name,
+  });
+  if (!createResult.ok) {
+    if (createResult.error == "name_taken") {
+      throw new NameTakenError(name);
+    } else {
+      console.error("<createChannel> unhandled error: ", createResult.error);
+    }
+  }
+  return createResult;
+}
+
+export async function setTopic(channelId: string, topic: string) {
+  const topicResult = await apiClient.conversations.setTopic({
+    channel: channelId,
+    topic,
+  });
+  if (!topicResult.ok) {
+    console.error("error at createChannel.setTopic", topicResult.error);
+  }
+  return topicResult;
+}
+
+export async function sendMessageToThread(
+  text: string,
+  channel: string,
+  thread_ts: string
+) {
+  return await apiClient.chat.postMessage({
+    text,
+    channel,
+    thread_ts,
+  });
+}
+
+export async function expandThread(
+  toChannel: string,
+  fromChannel: string,
+  ts: string
+) {
+  const messages = await getEntireMessagesOfThread(fromChannel, ts);
+  for (const message of messages) {
+    await sendMessageAsUser(
+      {
+        text: message.text,
+        channel: toChannel,
+      },
+      message.user
+    );
+    console.info(`sent request ${message.text} by ${message.user}`);
+  }
+}
+
 const userInfoCache: { [key: string]: any } = {};
 async function getUserInfo(userId: string) {
   if (userId in userInfoCache) {
@@ -18,23 +78,11 @@ async function getUserInfo(userId: string) {
   }
 }
 
-export async function sendMessageToThread(
-  text: string,
-  channel: string,
-  thread_ts: string
-) {
-  return await apiClient.chat.postMessage({
-    text,
-    channel,
-    thread_ts,
-  });
-}
-
 /*
  * [x] text support
  * [ ] attachment support
  */
-export async function sendMessageAsUser(args: any, userId: string) {
+async function sendMessageAsUser(args: any, userId: string) {
   const {
     profile: { display_name, image_72 },
   } = await getUserInfo(userId);
@@ -87,52 +135,4 @@ async function getEntireMessagesOfThread(channel: string, ts: string) {
 
   // sort by ts. somehow slack returns response new to old
   return results.sort((a, b) => a.ts - b.ts);
-}
-
-export async function expandThread(
-  toChannel: string,
-  fromChannel: string,
-  ts: string
-) {
-  const messages = await getEntireMessagesOfThread(fromChannel, ts);
-  for (const message of messages) {
-    await sendMessageAsUser(
-      {
-        text: message.text,
-        channel: toChannel,
-      },
-      message.user
-    );
-    console.info(`sent request ${message.text} by ${message.user}`);
-  }
-}
-
-export class NameTakenError extends Error {
-  constructor(public channel_name: string) {
-    super();
-  }
-}
-export async function createChannel(name: string) {
-  const createResult = await apiClient.conversations.create({
-    name,
-  });
-  if (!createResult.ok) {
-    if (createResult.error == "name_taken") {
-      throw new NameTakenError(name);
-    } else {
-      console.error("<createChannel> unhandled error: ", createResult.error);
-    }
-  }
-  return createResult;
-}
-
-export async function setTopic(channelId: string, topic: string) {
-  const topicResult = await apiClient.conversations.setTopic({
-    channel: channelId,
-    topic,
-  });
-  if (!topicResult.ok) {
-    console.error("error at createChannel.setTopic", topicResult.error);
-  }
-  return topicResult;
 }
