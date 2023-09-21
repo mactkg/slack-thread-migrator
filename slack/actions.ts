@@ -1,5 +1,10 @@
 import { apiClient } from "./client.ts";
-import { CHANNEL_DEV_NULL } from "./constants.ts";
+import { BOT, CHANNEL_DEV_NULL } from "./constants.ts";
+
+export async function getBotUserID() {
+  const auth = await apiClient.auth.test();
+  return auth.user_id;
+}
 
 export class NameTakenError extends Error {
   constructor(public channel_name: string) {
@@ -67,6 +72,47 @@ export async function getPermalinkOfParentMessage(channel: string, ts: string) {
     message_ts: ts,
   });
   return result.permalink;
+}
+
+export async function checkTheBotIsAlreadyInChannel(
+  channel: string
+): Promise<boolean> {
+  let cursor: string | undefined = undefined;
+  const bot_id = BOT.id;
+  do {
+    const res = await apiClient.conversations.members({
+      cursor,
+      channel,
+    });
+    if (res.ok) {
+      cursor = res.response_metadata?.next_cursor;
+    } else {
+      return false;
+    }
+
+    if (res.members.indexOf(bot_id) >= 0) {
+      return true;
+    }
+  } while (cursor);
+
+  return false;
+}
+
+export class ChannelJoinError extends Error {
+  constructor(public error_name: string) {
+    super();
+  }
+}
+export async function joinChannel(channel: string) {
+  const res = await apiClient.conversations.join({
+    channel,
+  });
+
+  if (res.error) {
+    throw new ChannelJoinError(res.error);
+  } else {
+    return res;
+  }
 }
 
 const userInfoCache: { [key: string]: any } = {};

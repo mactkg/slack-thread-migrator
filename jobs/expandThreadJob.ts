@@ -1,7 +1,9 @@
 import {
   NameTakenError,
   NotInChannelError,
+  checkTheBotIsAlreadyInChannel,
   getPermalinkOfParentMessage,
+  joinChannel,
 } from "../slack/actions.ts";
 import {
   createChannel,
@@ -31,6 +33,8 @@ export class MigrateThreadJob {
         await showNoPermissionModal(this.trigger_id);
       } else if (e instanceof NameTakenError) {
         await showNameTakenErrorModal(e.channel_name, this.trigger_id);
+      } else {
+        console.error(`uncaught error ${e}`);
       }
 
       return false;
@@ -38,6 +42,16 @@ export class MigrateThreadJob {
   }
 
   private async _run() {
+    const alreadyInChannel = await checkTheBotIsAlreadyInChannel(
+      this.channelId
+    );
+    if (!alreadyInChannel) {
+      console.info(
+        `This bot not in ${this.channelId}. The bot try to join the channel`
+      );
+      await joinChannel(this.channelId);
+    }
+
     const channel = await createChannel(this.migrateChannelName());
     if (!channel.ok) {
       if (channel.error) {

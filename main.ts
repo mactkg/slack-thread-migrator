@@ -1,4 +1,4 @@
-import { socketModeClient } from "./slack/index.ts";
+import { BOT, getBotUserID, socketModeClient } from "./slack/index.ts";
 import { MigrateThreadJob } from "./jobs/expandThreadJob.ts";
 
 socketModeClient.addEventListener(
@@ -21,4 +21,6 @@ socketModeClient.addEventListener(
   }
 );
 
+BOT.id = await getBotUserID();
+console.info(`Launched. Bot ID: ${BOT.id}`);
 await socketModeClient.start();
