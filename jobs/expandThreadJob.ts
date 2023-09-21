@@ -28,7 +28,7 @@ export class MigrateThreadJob {
 
     const topic = await setTopic(
       channel.channel.id,
-      this.migrateChannelTopic(),
+      this.migrateChannelTopic()
     );
     if (!topic.ok) {
       if (topic.error) {
@@ -37,16 +37,12 @@ export class MigrateThreadJob {
       return false;
     }
 
-    await expandThread(
-      channel.channel.id,
-      this.channelId,
-      this.thread_ts,
-    );
+    await expandThread(channel.channel.id, this.channelId, this.thread_ts);
 
     const notifyRes = await sendMessageToThread(
       `このスレッドは <#${channel.channel.id}> に移行しました。`,
       this.channelId,
-      this.thread_ts,
+      this.thread_ts
     );
     if (!notifyRes.ok && channel.error) {
       this.errors.push(channel.error);
