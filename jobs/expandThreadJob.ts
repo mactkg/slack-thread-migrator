@@ -1,4 +1,8 @@
-import { NameTakenError, NotInChannelError } from "../slack/actions.ts";
+import {
+  NameTakenError,
+  NotInChannelError,
+  getPermalinkOfParentMessage,
+} from "../slack/actions.ts";
 import {
   createChannel,
   expandThread,
@@ -33,7 +37,7 @@ export class MigrateThreadJob {
     }
   }
 
-  async _run() {
+  private async _run() {
     const channel = await createChannel(this.migrateChannelName());
     if (!channel.ok) {
       if (channel.error) {
@@ -42,9 +46,14 @@ export class MigrateThreadJob {
       return false;
     }
 
+    const permalink = await getPermalinkOfParentMessage(
+      this.channelId,
+      this.thread_ts
+    );
+
     const topic = await setTopic(
       channel.channel.id,
-      this.migrateChannelTopic()
+      this.migrateChannelTopic(permalink)
     );
     if (!topic.ok) {
       if (topic.error) {
@@ -70,8 +79,8 @@ export class MigrateThreadJob {
     return `talk-at-${this.channelName.slice(0, 10)}-${this.channelDateTime()}`;
   }
 
-  private migrateChannelTopic() {
-    return `copy of conversation at [URL]`;
+  private migrateChannelTopic(url?: string) {
+    return `copy of conversation at ${url}`;
   }
 
   private tsInMs(): number {

@@ -61,6 +61,14 @@ export async function expandThread(
   }
 }
 
+export async function getPermalinkOfParentMessage(channel: string, ts: string) {
+  const result = await apiClient.chat.getPermalink({
+    channel,
+    message_ts: ts,
+  });
+  return result.permalink;
+}
+
 const userInfoCache: { [key: string]: any } = {};
 async function getUserInfo(userId: string) {
   if (userId in userInfoCache) {
