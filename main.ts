@@ -11,7 +11,8 @@ socketModeClient.addEventListener(
     const migrage = new MigrateThreadJob(
       body.channel.id,
       body.channel.name,
-      body.message.thread_ts
+      body.message.thread_ts,
+      body.trigger_id
     );
     const result = await migrage.run();
     if (!result) {

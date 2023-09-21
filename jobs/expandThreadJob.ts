@@ -1,3 +1,4 @@
+import { NameTakenError, NotInChannelError } from "../slack/actions.ts";
 import {
   createChannel,
   expandThread,
@@ -5,6 +6,8 @@ import {
   setTopic,
 } from "../slack/index.ts";
 import { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
+import { showNoPermissionModal } from "../slack/views/NoPermissionModal.ts";
+import { showNameTakenErrorModal } from "../slack/views/NameTakenErrorModal.ts";
 
 export class MigrateThreadJob {
   errors: string[] = [];
@@ -13,12 +16,25 @@ export class MigrateThreadJob {
     private channelId: string,
     private channelName: string,
     private thread_ts: string,
+    private trigger_id: string
   ) {}
 
-  async run() {
-    const channel = await createChannel(
-      this.migrateChannelName(),
-    );
+  async run(): Promise<boolean> {
+    try {
+      return await this._run();
+    } catch (e) {
+      if (e instanceof NotInChannelError) {
+        await showNoPermissionModal(this.trigger_id);
+      } else if (e instanceof NameTakenError) {
+        await showNameTakenErrorModal(e.channel_name, this.trigger_id);
+      }
+
+      return false;
+    }
+  }
+
+  async _run() {
+    const channel = await createChannel(this.migrateChannelName());
     if (!channel.ok) {
       if (channel.error) {
         this.errors.push(channel.error);

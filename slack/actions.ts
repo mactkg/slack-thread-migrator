@@ -2,7 +2,7 @@ import { apiClient } from "./client.ts";
 import { CHANNEL_DEV_NULL } from "./constants.ts";
 
 const userInfoCache: { [key: string]: any } = {};
-export async function getUserInfo(userId: string) {
+async function getUserInfo(userId: string) {
   if (userId in userInfoCache) {
     return userInfoCache[userId];
   }
@@ -55,7 +55,8 @@ export async function sendMessageAsUser(args: any, userId: string) {
   return result;
 }
 
-export async function getEntireMessagesOfThread(channel: string, ts: string) {
+export class NotInChannelError extends Error {}
+async function getEntireMessagesOfThread(channel: string, ts: string) {
   const results = [];
   let cursor = undefined;
   while (true) {
@@ -66,6 +67,10 @@ export async function getEntireMessagesOfThread(channel: string, ts: string) {
       cursor,
     });
     if (!result.ok) {
+      if (result.error == "not_in_channel") {
+        console.error("not_in_channel");
+        throw new NotInChannelError();
+      }
       console.error("error at getEntireMessageOfThread", result.error);
       return [];
     }
@@ -102,12 +107,21 @@ export async function expandThread(
   }
 }
 
+export class NameTakenError extends Error {
+  constructor(public channel_name: string) {
+    super();
+  }
+}
 export async function createChannel(name: string) {
   const createResult = await apiClient.conversations.create({
     name,
   });
   if (!createResult.ok) {
-    console.error("error at createChannel.create", createResult.error);
+    if (createResult.error == "name_taken") {
+      throw new NameTakenError(name);
+    } else {
+      console.error("<createChannel> unhandled error: ", createResult.error);
+    }
   }
   return createResult;
 }
